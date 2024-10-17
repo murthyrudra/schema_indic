@@ -6,6 +6,7 @@
     "required": [
         "created_by",
         "domain",
+        "language",
         "seed_examples",
         "document",
         "document_outline"
@@ -25,6 +26,16 @@
                 "Chemistry",
                 "History",
                 "Pop culture"
+            ]
+        },
+        "language": {
+            "description": "The language of the document",
+            "type": "string",
+            "minLength": 1,
+            "examples": [
+                "English",
+                "Hindi",
+                "German"
             ]
         },
         "seed_examples": {
