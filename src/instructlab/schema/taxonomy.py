@@ -63,7 +63,13 @@ class TaxonomyMessageFormat(enum.Enum):
 class Taxonomy:
     """A container for a parsed taxonomy qna.yaml file."""
 
-    def __init__(self, *, taxonomy_path: pathlib.Path, abs_path: pathlib.Path, message_format: TaxonomyMessageFormat) -> None:
+    def __init__(
+        self,
+        *,
+        taxonomy_path: pathlib.Path,
+        abs_path: pathlib.Path,
+        message_format: TaxonomyMessageFormat,
+    ) -> None:
         """Create a container for a parsed taxonomy qna.yaml file.
 
         Args:
@@ -78,9 +84,15 @@ class Taxonomy:
         self.path: pathlib.Path = taxonomy_path
         abs_path = abs_path.resolve()
         cwd = pathlib.Path.cwd()
-        self.rel_path: pathlib.Path = abs_path.relative_to(cwd) if abs_path.is_relative_to(cwd) else abs_path
+        self.rel_path: pathlib.Path = (
+            abs_path.relative_to(cwd) if abs_path.is_relative_to(cwd) else abs_path
+        )
         if message_format is TaxonomyMessageFormat.AUTO:
-            message_format = TaxonomyMessageFormat.GITHUB if "GITHUB_ACTIONS" in os.environ and "GITHUB_WORKFLOW" in os.environ else TaxonomyMessageFormat.STANDARD
+            message_format = (
+                TaxonomyMessageFormat.GITHUB
+                if "GITHUB_ACTIONS" in os.environ and "GITHUB_WORKFLOW" in os.environ
+                else TaxonomyMessageFormat.STANDARD
+            )
         self.message_format: TaxonomyMessageFormat = message_format
         self.errors: int = 0
         self.warnings: int = 0
@@ -128,11 +140,17 @@ class Taxonomy:
                         *message_args,
                     )
                 else:
-                    logger.error("%s:%s:%s " + message, self.rel_path, line, col, *message_args)
+                    logger.error(
+                        "%s:%s:%s " + message, self.rel_path, line, col, *message_args
+                    )
             case TaxonomyMessageFormat.STANDARD | _:
                 if message_args:
                     message = message % message_args
-                print(f"ERROR: {self.rel_path}:{line}:{col} [{yaml_path}] {message}" if yaml_path else f"ERROR: {self.rel_path}:{line}:{col} {message}")
+                print(
+                    f"ERROR: {self.rel_path}:{line}:{col} [{yaml_path}] {message}"
+                    if yaml_path
+                    else f"ERROR: {self.rel_path}:{line}:{col} {message}"
+                )
         return self
 
     def warning(
@@ -176,11 +194,17 @@ class Taxonomy:
                         *message_args,
                     )
                 else:
-                    logger.warning("%s:%s:%s " + message, self.rel_path, line, col, *message_args)
+                    logger.warning(
+                        "%s:%s:%s " + message, self.rel_path, line, col, *message_args
+                    )
             case TaxonomyMessageFormat.STANDARD | _:
                 if message_args:
                     message = message % message_args
-                print(f"WARN: {self.rel_path}:{line}:{col} [{yaml_path}] {message}" if yaml_path else f"WARN: {self.rel_path}:{line}:{col} {message}")
+                print(
+                    f"WARN: {self.rel_path}:{line}:{col} [{yaml_path}] {message}"
+                    if yaml_path
+                    else f"WARN: {self.rel_path}:{line}:{col} {message}"
+                )
         return self
 
 
@@ -231,7 +255,9 @@ class TaxonomyParser:
         if schema_version is None:
             versions = schema_versions()
             if not versions:
-                raise TaxonomyReadingException(f'Schema base "{schema_base()}" does not contain any schema versions')
+                raise TaxonomyReadingException(
+                    f'Schema base "{schema_base()}" does not contain any schema versions'
+                )
             schema_version = int(versions[-1].name[1:])
         self.schema_version: int = schema_version
         if yamllint_config is None:
@@ -273,7 +299,9 @@ class TaxonomyParser:
 
         lines = result.stdout.splitlines()
         if lines:
-            pattern = re.compile(r"[^:]+:(?P<line>[^:]+):(?P<col>[^:]+):\s*\[(?P<severity>[^]]+)\]\s*(?P<message>.*)")
+            pattern = re.compile(
+                r"[^:]+:(?P<line>[^:]+):(?P<col>[^:]+):\s*\[(?P<severity>[^]]+)\]\s*(?P<message>.*)"
+            )
             for line in lines:
                 match = pattern.match(line)
                 if match:
@@ -298,7 +326,11 @@ class TaxonomyParser:
         retrieve = functools.partial(_retrieve, f"v{taxonomy.version}")
         schema_name = taxonomy.path.parts[0]
         if schema_name not in self.taxonomy_folders:
-            schema_name = "knowledge" if "document" in taxonomy.contents else "compositional_skills"
+            schema_name = (
+                "knowledge"
+                if "document" in taxonomy.contents
+                else "compositional_skills"
+            )
 
         try:
             schema_resource = retrieve(f"{schema_name}.json")
@@ -328,7 +360,9 @@ class TaxonomyParser:
                 if self.yq_available:
                     try:
                         yq_expression = f"{yaml_path} | line"
-                        line = subprocess.check_output(["yq", yq_expression], input=text, text=True)
+                        line = subprocess.check_output(
+                            ["yq", yq_expression], input=text, text=True
+                        )
                         line = line.strip() if line else 1
                     except (subprocess.CalledProcessError, FileNotFoundError) as e:
                         if isinstance(e, FileNotFoundError):
@@ -380,7 +414,11 @@ class TaxonomyParser:
         else:
             taxonomy_path = abs_path
 
-        taxonomy = Taxonomy(taxonomy_path=taxonomy_path, abs_path=abs_path, message_format=self.message_format)
+        taxonomy = Taxonomy(
+            taxonomy_path=taxonomy_path,
+            abs_path=abs_path,
+            message_format=self.message_format,
+        )
 
         if not abs_path.is_file():
             return taxonomy.error(
